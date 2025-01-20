@@ -66,8 +66,8 @@ Le processus de filtrage suit les étapes suivantes :
 
 - **`fir_parallel_16.vhd`** : Implémentation du filtre FIR parallèle en VHDL.
 - **`fir_parallel_16_tb.vhd`** : Banc de test pour la validation du filtre.
-- **`stimuleFreqCst`** : Fichier qui contient le code pour généré le signal de test sinusoïdal à fréquence constante.
-- **`stimuleFreqVar`** : Fichier de test pour le signal chirp.
+- **`stimuleSignalFreqCst`** : Fichier qui contient le code pour généré le signal de test sinusoïdal à fréquence constante.
+- **`stimuleFreqVar.m`** : Fichier de test pour le signal chirp.
 
 
 ## **Licence**
