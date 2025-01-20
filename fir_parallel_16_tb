@@ -1,77 +1,96 @@
---simulation du filtre a une reponse impulsionnelle----------------------------------------------------
--------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------
+-- Testbench du filtre FIR parallèle à 16 échantillons avec pipeline
+-- 
+-- Description :
+-- Ce testbench permet de valider le fonctionnement du filtre FIR parallèle en
+-- appliquant différents stimuli, y compris une impulsion pour observer la réponse
+-- impulsionnelle.
+--
+-- Auteur     : DJOMO ELISABETH
+-- Date       : 20-01-2025
+-- Licence    : MIT License
+----------------------------------------------------------------------------------
 
-library IEEE; 
-use IEEE.std_logic_1164.all; 
-use IEEE.numeric_std.all; -- Nouvelle bibliothèque standard pour les opérations arithmétiques
+library IEEE;
+use IEEE.std_logic_1164.all;
+use IEEE.numeric_std.all; -- Bibliothèque standard pour les opérations arithmétiques
 
-entity fir_par_16echantillon_tb is
-end;
+-- Déclaration de l'entité de testbench
+entity fir_parallel_16_tb is
+end entity;
 
-architecture bench of fir_par_16echantillon_tb is
+architecture bench of fir_parallel_16_tb is
 
-  -- Déclaration du composant FIR
-  component fir_par_16echantillon
-    port(
-      H50_I    : in  std_logic;
-      Reset    : in  std_logic;
-      data_in  : in  std_logic_vector(7 downto 0);
-      CLK_CAN  : out std_logic;
-      CLK_CNA  : out std_logic;
-      data_out : out std_logic_vector(7 downto 0)
+  -- Déclaration du composant FIR à tester
+  component fir_parallel_16
+    port (
+      clk       : in  std_logic;                      -- Horloge principale
+      reset_n   : in  std_logic;                      -- Réinitialisation active bas
+      data_in   : in  std_logic_vector(7 downto 0);   -- Données d'entrée (8 bits)
+      clk_can   : out std_logic;                      -- Horloge CAN
+      clk_cna   : out std_logic;                      -- Horloge CNA
+      data_out  : out std_logic_vector(7 downto 0)    -- Données de sortie filtrées (8 bits)
     );
   end component;
 
-  -- Signaux de test
-  signal H50_I    : std_logic;
-  signal Reset    : std_logic;
-  signal data_in  : std_logic_vector(7 downto 0);
-  signal CLK_CAN  : std_logic;
-  signal CLK_CNA  : std_logic;
-  signal data_out : std_logic_vector(7 downto 0);
+  -- Déclaration des signaux de test
+  signal clk       : std_logic := '0';  -- Signal d'horloge principal
+  signal reset_n   : std_logic := '1';  -- Signal de réinitialisation actif bas
+  signal data_in   : std_logic_vector(7 downto 0);  -- Signal d'entrée de données
+  signal clk_can   : std_logic;  -- Horloge pour le CAN
+  signal clk_cna   : std_logic;  -- Horloge pour le CNA
+  signal data_out  : std_logic_vector(7 downto 0);  -- Signal de sortie de données
+
+  -- Définition de la période d'horloge
+  constant clk_period : time := 20 ns;
 
 begin
 
-  -- Instanciation du DUT (Device Under Test)
-  uut: fir_par_16echantillon
+  -- Instanciation du filtre FIR sous test (DUT - Device Under Test)
+  uut: fir_parallel_16
     port map (
-      H50_I    => H50_I,
-      Reset    => Reset,
-      data_in  => data_in,
-      CLK_CAN  => CLK_CAN,
-      CLK_CNA  => CLK_CNA,
-      data_out => data_out
+      clk       => clk,
+      reset_n   => reset_n,
+      data_in   => data_in,
+      clk_can   => clk_can,
+      clk_cna   => clk_cna,
+      data_out  => data_out
     );
 
-  -- Génération de l'horloge
-  Clocking : process
+  -- Génération de l'horloge avec une période définie
+  clk_process : process
   begin
-    H50_I  <= '1';
-    wait for 10 ns;
-    H50_I  <= '0';
-    wait for 10 ns;
+    clk <= '0';
+    wait for clk_period / 2;
+    clk <= '1';
+    wait for clk_period / 2;
   end process;
 
-  -- Stimulus
-  Simulus : process
+  -- Génération des stimuli pour tester le filtre
+  stimulus_process : process
   begin
-    -- Réinitialisation
-    Reset <= '1';
-    data_in <= std_logic_vector(to_unsigned(128, 8)); -- Conversion en std_logic_vector
+    -- Étape 1 : Initialisation et reset
+    report "Début de la simulation - Application de la réinitialisation.";
+    reset_n <= '0';
+    data_in <= std_logic_vector(to_unsigned(128, 8)); -- Valeur neutre en complément à deux (0)
     wait for 40 ns;
 
-    -- Fin de la réinitialisation
-    Reset <= '0';
-    data_in <= std_logic_vector(to_unsigned(128, 8));
+    -- Étape 2 : Fin du reset
+    report "Fin de la réinitialisation - Mise en route du filtre.";
+    reset_n <= '1';
+    data_in <= std_logic_vector(to_unsigned(128, 8)); -- Valeur neutre (silence)
     wait for 40 ns;
 
-    -- Données de test
-    data_in <= std_logic_vector(to_unsigned(255, 8));
+    -- Étape 3 : Test de réponse impulsionnelle
+    report "Test de la réponse impulsionnelle - Impulsion à l'entrée.";
+    data_in <= std_logic_vector(to_unsigned(255, 8)); -- Impulsion (valeur max)
     wait for 20 ns;
 
+    -- Étape 4 : Retour à la valeur neutre
+    report "Retour à la valeur neutre.";
     data_in <= std_logic_vector(to_unsigned(128, 8));
     wait;
+
   end process;
 
 end bench;
-
