@@ -74,4 +74,3 @@ Le processus de filtrage suit les étapes suivantes :
 
 Ce projet est sous licence MIT - voir le fichier `LICENSE` pour plus d'informations.
 
-Avec cette documentation, votre projet est clairement structuré et justifié en termes de choix d'architecture et d'outils de simulation.
